@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<title>Login</title>
+<style>
+    html, body {
+        height: 100%;
+    }
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .form-signin {
+        width: 100%;
+        max-width: 330px;
+        padding: 15px;
+        margin: auto;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="col-6">
+            <form class="form-signin" method="post">
+                <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+                {% if error %}
+                <div class="alert alert-danger my-3" role="alert">{{ error }}</div>
+                {% endif %}
+                <label for="password" class="sr-only">Password</label>
+                <input type="password" id="password" class="form-control" placeholder="Password" required autofocus name="password">
+                <button class="btn btn-lg btn-primary btn-block my-4" type="submit">Sign in</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

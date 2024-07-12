@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from datetime import datetime, timedelta
 import socket, random, secrets, threading, pytz, os, signal
-from flask import request, redirect, url_for, session
+from flask import request, redirect, url_for, session, render_template
 from flask import Flask
 from emailhelper import EmailHelper
 
@@ -71,21 +71,14 @@ def require_password():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         if request.form.get('password') == password:
             session['logged_in'] = True
             return redirect("/admin")
         else:
-            return 'Incorrect password', 401
-    return '''
-    <!doctype html>
-    <title>Login</title>
-    <h1>Login</h1>
-    <form method=post>
-      Password: <input type=password name=password>
-      <input type=submit value=Login>
-    </form>
-    '''
+            error = 'Incorrect password'
+    return render_template('login.html', error=error)
 
 @app.route('/shutdown', methods=['GET'])
 def shutdown_server():
