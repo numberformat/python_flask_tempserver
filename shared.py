@@ -10,7 +10,6 @@ from emailhelper import EmailHelper
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-server_port=5001
 app.secret_key = 'something_random'+str(random.randint(1, 100)) # Needed for session management
 password = secrets.token_urlsafe(16)
 
@@ -37,7 +36,7 @@ shared_styles = {
 
 db = SQLAlchemy()
 
-def send_email(shutdown_time, notify_email, server_ip, server_port=server_port, password=""):
+def send_email(shutdown_time, notify_email, server_ip, server_port, password, smtp_host, smtp_port):
     receiver = [notify_email]
     server_ip = get_ip_address()
     message = f"""
@@ -60,7 +59,7 @@ def send_email(shutdown_time, notify_email, server_ip, server_port=server_port, 
     </html>
     """
     logger.debug(message)
-    emailhelper = EmailHelper("Please send the file to the server")
+    emailhelper = EmailHelper("Please login to the server", smtp_host, smtp_port)
     emailhelper.append_msg_body(message)
     emailhelper.send_message(receiver)
 
@@ -92,12 +91,28 @@ def shutdown_server():
     </script>
     '''
 
-def start_receiver(timeout_minutes, notify_email, password):
+def find_available_port(host, port_range):
+    for port in port_range:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind((host, port))
+                return port  # Port is available
+            except socket.error as e:
+                continue  # This port is already in use, try the next one
+    return None  # No available port found
+
+def start_receiver(args, password):
     global timer
+    port_range = range(5000, 6000)
+    server_port = find_available_port('0.0.0.0', port_range)
+    if server_port is None:
+        logger.error("No available ports in the specified range.")
+        return
     shutdown_time = (datetime.now(pytz.utc) +
-                   timedelta(minutes=timeout_minutes)).strftime("%A, %B %d, %Y at %H:%M:%S %Z")
-    send_email(shutdown_time, notify_email, get_ip_address(), server_port, password)
+                   timedelta(minutes=int(args.timeout_minutes))).strftime("%A, %B %d, %Y at %H:%M:%S %Z")
+    send_email(shutdown_time, args.notify_email, get_ip_address(), server_port, password, args.smtp_host, int(args.smtp_port))
     logger.info("Start a timer for automatic shutdown")
-    timer = threading.Timer(timeout_minutes * 60, shutdown_server)
+    timer = threading.Timer(int(args.timeout_minutes) * 60, shutdown_server)
     timer.start()
+    logger.info(f"Starting server on {get_ip_address()}:{server_port}")
     app.run(host='0.0.0.0', port=server_port, debug=True, use_reloader=False)

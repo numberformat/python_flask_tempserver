@@ -31,7 +31,9 @@ db.create_all()
 quit()
 ```
 
-Finally start the application by running the following command. `python app.py --notify_email some@email.com --timeout_minutes 10000`. The timeout can be set to any amount of time or leave it off to let the server run indefinitely.
+Run python setup.py for the first time to configure your environment settings.
+
+Finally start the application by running the following command. `python app.py`.
 
 ## Contributing
 

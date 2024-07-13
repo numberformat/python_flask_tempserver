@@ -2,13 +2,8 @@ import os, smtplib, getpass, socket, sys, ssl
 import traceback
 
 from email.message import EmailMessage
-from email.headerregistry import Address
 from email.utils import make_msgid
 from email.mime.application import MIMEApplication
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.utils import COMMASPACE, formatdate
-from email.utils import make_msgid
 
 from os.path import basename
 import logging
@@ -20,10 +15,10 @@ if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, format='%(levelname)-5s | %(asctime)s | %(message)s | %(filename)s:%(lineno)d', level=logging.INFO)
 
 class EmailHelper:
-    def __init__(self, subject, smtphost='mail.noami.us', port=587):
+    def __init__(self, subject, smtphost, port):
         self._smtphost = smtphost
         self._port = port
-        self._emailfrom = getpass.getuser() + "@" + socket.getfqdn()
+        self._emailfrom = getpass.getuser() + "@" + self.get_ip_address() + ".inet.arpa"
         self._msgbody = []
         self._subject = subject
         self._file = []
@@ -31,6 +26,21 @@ class EmailHelper:
         self._msg = EmailMessage()
         self._images = []
         self._asparagus_cid = make_msgid()[1:-1]
+
+    def get_ip_address(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.254.254.254', 1))
+            IP = s.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            s.close()
+        logging.info('IP Address: ' + IP)
+        return IP
+
     def append_file(self, file):
         self._file.append(file)
 
